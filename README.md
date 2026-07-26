@@ -10,6 +10,7 @@ Playwright-based wrapper and test-automation toolkit. Provides a high-level `Bro
 - PageObject pattern
 - Context manager and decorator APIs for browser lifecycle
 - Python 3.9+
+- `Browser` API is compatible with [easelenium](https://github.com/kirillstrelkov/easelenium)
 
 ---
 
