@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "easeplaywright"
+version = "0.1.0"
+requires-python = ">=3.9"
+readme = { file = "README.md", content-type = "text/markdown" }
+description = "easeplaywright - Playwright-based Test Automation Framework."
+authors = [
+    { name = "Kirill Strelkov", email = "kirillstrelkov@users.noreply.github.com" },
+]
+dependencies = [
+    "playwright",
+    "pytest",
+    "pytest-html",
+    "loguru",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.409",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-profiling",
+    "pytest-retry>=1.7.0",
+    "ruff",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["easeplaywright"]

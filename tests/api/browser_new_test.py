@@ -1,0 +1,244 @@
+"""New Browser API tests."""
+
+import pytest
+
+from easeplaywright.base_test import BaseTest
+from easeplaywright.browser import Browser
+from tests import EASEPLAYWRIGHT_TEST_URL
+
+
+@pytest.mark.skipif(not Browser.supports("gc"), reason="Browser not supported")
+class BrowserTest(BaseTest):
+    """Browser tests."""
+
+    BROWSER_NAME = "gc"
+    LOGGER = None
+
+    def test_get_parent(self) -> None:
+        """Check get parent."""
+        self.browser.get("https://duckduckgo.com/")
+
+        element = self.browser.find_element(by_id="__next")
+        parent = self.browser.get_parent(element)
+
+        assert self.browser.get_tag_name(parent) == "body"
+
+    def test_switch_to_frame(self) -> None:
+        """Check switch to frame."""
+        frame = "iframe[src*=default]"
+
+        url = "https://www.w3schools.com/html/html_iframe.asp"
+        frame_url = "https://www.w3schools.com/html/default.asp"
+
+        self.browser.get(url)
+        assert url == self.browser.get_current_frame_url()
+
+        self.browser.switch_to_frame(by_css=frame)
+        assert frame_url == self.browser.get_current_frame_url()
+
+        self.browser.switch_to_default_content()
+        assert url == self.browser.get_current_frame_url()
+
+    def test_type_click_get_text(self) -> None:
+        """Check type, click, get text."""
+        self.browser.get("https://duckduckgo.com/")
+
+        css_search_field = "input[class*='search-input']"
+        css_search_btn = "button[data-mode='search']"
+        css_results = "article h2"
+
+        self.browser.type(by_css=css_search_field, text="selenium python io")
+        self.browser.click(by_css=css_search_btn)
+
+        self.browser.wait_for_visible(by_css=css_results)
+        assert "Selenium with Python" in self.browser.get_text(by_css=css_results)
+
+    def test_mouse_left_right_clicks(self) -> None:
+        """Check mouse left, right clicks."""
+        self.browser.get("https://www.openstreetmap.org/")
+
+        map_element = "map"
+        context_menu = "#map-context-menu .dropdown-menu"
+        welcome_close = ".welcome .btn-close"
+
+        self.browser.wait_for_visible(by_css=welcome_close)
+
+        assert not self.browser.is_visible(by_css=context_menu)
+        if self.browser.is_visible(by_css=welcome_close):
+            self.browser.click(by_css=welcome_close)
+
+        self.browser.mouse.right_click(by_id=map_element)
+        self.browser.wait_for_visible(by_css=context_menu)
+
+        self.browser.mouse.left_click_by_offset(
+            xoffset=-50,
+            yoffset=-50,
+            by_id=map_element,
+        )
+        self.browser.wait_for_not_visible(by_css=context_menu)
+
+        self.browser.mouse.right_click_by_offset(
+            xoffset=100,
+            yoffset=100,
+            by_id=map_element,
+        )
+        self.browser.wait_for_visible(by_css=context_menu)
+
+    def test_mouse_hover(self) -> None:
+        """Check mouse hover."""
+        self.browser.get("https://www.openstreetmap.org/")
+
+        edit_buton = "#editanchor"
+        tooltip = ".tooltip"
+
+        self.browser.mouse.hover(by_css=edit_buton, force=True)
+        self.browser.wait_for_visible(by_css=tooltip)
+        assert "Zoom in" in self.browser.get_text(by_css=tooltip)
+
+    def test_select(self) -> None:
+        """Check select."""
+        self.browser.get(EASEPLAYWRIGHT_TEST_URL)
+
+        select_element = "select[name]"
+
+        old_option = self.browser.get_selected_text_from_dropdown(by_css=select_element)
+        self.browser.select_random_option_from_dropdown(
+            by_css=select_element,
+            texts_to_skip={old_option},
+        )
+        new_option = self.browser.get_selected_text_from_dropdown(by_css=select_element)
+        new_option_value = self.browser.get_selected_value_from_dropdown(
+            by_css=select_element,
+        )
+
+        assert old_option != new_option
+        assert new_option.lower().split(" ")[0] == new_option_value
+
+        self.browser.select_option_by_index_from_dropdown(
+            by_css=select_element,
+            index=0,
+        )
+
+        new_option = "Second Value"
+        self.browser.select_option_by_text_from_dropdown(
+            by_css=select_element,
+            text=new_option,
+        )
+        assert self.browser.get_selected_text_from_dropdown(by_css=select_element) == new_option
+
+        new_option = "third"
+        self.browser.select_option_by_value_from_dropdown(
+            by_css=select_element,
+            value=new_option,
+        )
+        assert self.browser.get_selected_value_from_dropdown(by_css=select_element) == new_option
+
+        index = 0
+        self.browser.select_option_by_index_from_dropdown(
+            by_css=select_element,
+            index=index,
+        )
+        assert self.browser.get_selected_value_from_dropdown(by_css=select_element) == "first"
+        index = 2
+        self.browser.select_option_by_index_from_dropdown(
+            by_css=select_element,
+            index=index,
+        )
+        assert self.browser.get_selected_value_from_dropdown(by_css=select_element) == "third"
+
+        texts = self.browser.get_texts_from_dropdown(by_css=select_element)
+        values = self.browser.get_values_from_dropdown(by_css=select_element)
+        assert len(texts) == len(values)
+        assert texts == ["First Value", "Second Value", "Third Value"]
+        assert values == ["first", "second", "third"]
+
+    def test_js_script(self) -> None:
+        """Check JavaScript execution."""
+        self.browser.get(EASEPLAYWRIGHT_TEST_URL)
+        js_statement = "return document.getElementsByTagName('span')[0].textContent;"
+        value = self.browser.execute_js(js_statement)
+
+        assert value == "About dropdowns"
+
+    def test_open_close_new_window(self) -> None:
+        """Check open and close new window."""
+        self.browser.get("https://html.com/attributes/a-target/")
+
+        a_element = "a[target*='blank']"
+
+        title_before_click = self.browser.get_title()
+        self.browser.switch_to_new_window(self.browser.click, by_css=a_element)
+        title_after_click = self.browser.get_title()
+
+        assert title_before_click != title_after_click
+
+        self.browser.close_current_window_and_focus_to_previous_one()
+        title_after_close = self.browser.get_title()
+        assert title_before_click == title_after_close
+
+    def test_alerts(self) -> None:
+        """Check alerts."""
+        self.browser.get("https://duckduckgo.com/")
+        js_statement = "window.alert_val = window.confirm('Confirm dialog');"
+
+        # alert_accept()/alert_dismiss() must be armed *before* the action
+        # that opens the dialog - see Browser.alert_accept() docstring.
+        self.browser.alert_accept()
+        self.browser.execute_js(js_statement)
+        assert self.browser.execute_js("return window.alert_val;")
+
+        self.browser.alert_dismiss()
+        self.browser.execute_js(js_statement)
+        assert not self.browser.execute_js("return window.alert_val;")
+
+    def test_get_attribute(self) -> None:
+        """Check get attribute."""
+        self.browser.get("https://duckduckgo.com/")
+        element = self.browser.find_element(by_css="nav ul a[class*='footer']")
+        assert "footer" in (self.browser.get_class(element) or "")
+        assert self.browser.get_tag_name(element) == "a"
+        assert self.browser.get_attribute(element, attr="href") == "/about"
+
+    def test_get_attribute_with_parent(self) -> None:
+        """Check get attribute with parent."""
+        self.browser.get("https://duckduckgo.com/")
+        parent = self.browser.find_element(by_tag="footer")
+
+        assert (
+            self.browser.get_attribute(
+                by_css="a[class*='footer']",
+                attr="href",
+                parent=parent,
+            )
+            == "/about"
+        )
+
+    def test_wait_for_attribute_is_changed_with_parent(self) -> None:
+        """Check wait for attribute is changed with parent."""
+        self.browser.get("https://material.angular.io/components/expansion/overview")
+
+        css_parent = "#expansion-overview"
+        self.browser.wait_for_visible(by_css=css_parent)
+        parent = self.browser.find_element(by_css=css_parent)
+
+        css_mat_accardion = "expansion-overview-example mat-expansion-panel"
+        old_value = self.browser.get_class(
+            by_css=css_mat_accardion,
+            parent=parent,
+        )
+        self.browser.click(
+            by_css=css_mat_accardion,
+            parent=parent,
+        )
+
+        self.browser.wait_for_attribute_is_changed(
+            by_css=css_mat_accardion,
+            attr="class",
+            parent=parent,
+            old_value=old_value,
+        )
+        new_value = self.browser.get_class(
+            by_css=css_mat_accardion,
+            parent=parent,
+        )
+        assert old_value != new_value
