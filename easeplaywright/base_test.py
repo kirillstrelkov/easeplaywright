@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import traceback
-from typing import Any, cast
+from typing import Any
 from unittest.case import TestCase
 
 from easeplaywright.browser import Browser
-from easeplaywright.utils import Logger, get_timestamp
+from easeplaywright.utils import Logger
 
 
 class BaseTest(TestCase):
@@ -15,7 +14,6 @@ class BaseTest(TestCase):
 
     TC_NAME_WIDTH = 100
     BROWSER_NAME = None
-    FAILED_SCREENSHOT_FOLDER: str | None = None
     LOGGER = Logger(name="easeplaywright.base_test.BaseTest")
 
     @classmethod
@@ -50,30 +48,6 @@ class BaseTest(TestCase):
 
     def tearDown(self) -> None:
         """Tear down."""
-        failed = True
-        self_any = cast("Any", self)
-        if hasattr(self, "_outcome"):
-            # python3
-            failed = self_any._outcome and not self_any._outcome.success  # noqa: SLF001
-        elif hasattr(self, "_resultForDoCleanups") and hasattr(
-            self_any._resultForDoCleanups,  # noqa: SLF001
-            "result",
-        ):
-            # nose
-            failed = not self_any._resultForDoCleanups.result.wasSuccessful()  # noqa: SLF001
-
-        if failed:
-            name = self.id()
-            filename = f"{name}_{self.browser.get_browser_initials()}_{get_timestamp()}"
-            try:
-                self.browser.save_screenshot(
-                    self.FAILED_SCREENSHOT_FOLDER,
-                    filename + ".png",
-                )
-            except Exception:  # noqa: BLE001
-                formatted_exc = traceback.format_exc()
-                if self.browser.logger:
-                    self.browser.logger.info(formatted_exc)
         TestCase.tearDown(self)
 
         if self.browser.logger:

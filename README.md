@@ -10,7 +10,7 @@ Playwright-based wrapper and test-automation toolkit. Provides a high-level `Bro
 - PageObject pattern
 - Context manager and decorator APIs for browser lifecycle
 - Python 3.9+
-- `Browser` API is compatible with [easelenium](https://github.com/kirillstrelkov/easelenium)
+- `Browser` API is almost compatible with [easelenium](https://github.com/kirillstrelkov/easelenium) - some features are not needed as they are built-in in playwright(example: screenshots)
 
 ---
 
@@ -64,7 +64,7 @@ from easeplaywright.browser import browser_context
 with browser_context("gc", headless=True) as browser:
     browser.get("https://duckduckgo.com")
     print(browser.get_title())
-# browser.quit() called automatically; screenshot saved on exception
+# browser.quit() called automatically
 ```
 
 ### Decorator
@@ -106,7 +106,7 @@ class MyTest(BaseTest):
         assert "DuckDuckGo" in self.browser.get_title()
 ```
 
-`BaseTest` handles browser setup/teardown and saves a screenshot on failure.
+`BaseTest` handles browser setup/teardown.
 
 ---
 

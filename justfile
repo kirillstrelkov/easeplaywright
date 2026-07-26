@@ -24,7 +24,7 @@ test:
     uv run pytest
 
 test-ci:
-	xvfb-run --server-args="-screen 0 1366x768x24" uv run pytest --retries 10 tests
+	xvfb-run -a --server-args="-screen 0 1366x768x24" uv run pytest --retries 10 tests
 
 bump part="patch":
     uv version --bump {{part}}

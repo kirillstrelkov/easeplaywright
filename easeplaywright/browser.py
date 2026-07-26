@@ -7,7 +7,6 @@ import traceback
 from contextlib import contextmanager
 from functools import cache
 from pathlib import Path
-from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any, Final, Union
 
 from playwright.sync_api import Error as PlaywrightError
@@ -15,7 +14,7 @@ from playwright.sync_api import Locator, sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from easeplaywright.mouse import Mouse
-from easeplaywright.utils import get_random_value, get_timestamp
+from easeplaywright.utils import get_random_value
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -45,7 +44,7 @@ def browser_decorator(  # noqa: PLR0913
     launch_kwargs: dict[str, Any] | None = None,
     context_kwargs: dict[str, Any] | None = None,
 ) -> Any:  # noqa: ANN401
-    """Wrap a function with browser setup, screenshot on failure, and teardown."""
+    """Wrap a function with browser setup and teardown."""
 
     def func_decorator(func: Callable[..., Any]) -> Any:  # noqa: ANN401
         def wrapper(*args: object, **kwargs: object) -> Any:  # noqa: ANN401
@@ -66,11 +65,6 @@ def browser_decorator(  # noqa: PLR0913
                 value = func(*args, **kwargs)
                 return_value = value
             except Exception:  # noqa: BLE001
-                try:
-                    if browser:
-                        browser.save_screenshot()
-                except Exception:  # noqa: BLE001, S110
-                    pass
                 traceback.print_exc()
             finally:
                 if browser:
@@ -107,7 +101,6 @@ def browser_context(  # noqa: PLR0913
     try:
         yield browser
     except Exception:  # noqa: BLE001
-        browser.save_screenshot()
         traceback.print_exc()
     finally:
         browser.quit()
@@ -199,12 +192,6 @@ class Browser:
         self.__pending_dialog_action: str | None = None
         self._context.on("page", self.__attach_dialog_handler)
         self.__attach_dialog_handler(self._page)
-
-        screenshot_path = Path(gettempdir()) / "easeplaywright_screenshots"
-        self.__screenshot_path = str(screenshot_path)
-
-        if not screenshot_path.exists():
-            screenshot_path.mkdir(parents=True, exist_ok=True)
 
         self.mouse = Mouse(self)
 
@@ -1431,27 +1418,6 @@ class Browser:
             by_class=by_class,
         )
         return locator.count() > 0
-
-    def get_screenshot_as_png(self) -> Any:  # noqa: ANN401
-        """Return screenshot in bytes."""
-        return self._page.screenshot()
-
-    def save_screenshot(
-        self,
-        saving_dir: str | None = None,
-        filename: str | None = None,
-    ) -> str:
-        """Save screenshot to file."""
-        if not saving_dir:
-            saving_dir = self.__screenshot_path
-        if not filename:
-            filename = get_timestamp() + ".png"
-        path_to_file = str((Path(saving_dir) / filename).absolute())
-
-        self._safe_log("Saving screenshot to '{}'", path_to_file)
-
-        self._page.screenshot(path=path_to_file)
-        return path_to_file
 
     def get_elements_count(  # noqa: PLR0913, PLR0917
         self,

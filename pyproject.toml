@@ -16,6 +16,7 @@ dependencies = [
     "pytest",
     "pytest-html",
     "loguru",
+    "pytest-playwright>=0.7.1",
 ]
 
 [dependency-groups]
