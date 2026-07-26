@@ -1,6 +1,6 @@
 # easeplaywright
 
-[![Test](https://github.com/kirillstrelkov/easeplaywright/actions/workflows/test.yml/badge.svg?branch=master&event=push)](https://github.com/kirillstrelkov/easeplaywright/actions/workflows/test.yml)
+[![Test](https://github.com/kirillstrelkov/easeplaywright/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/kirillstrelkov/easeplaywright/actions/workflows/test.yml)
 
 Playwright-based wrapper and test-automation toolkit. Provides a high-level `Browser` API and the [PageObject pattern](https://playwright.dev/python/docs/pom) on top of Playwright's sync API, without writing Playwright boilerplate.
 
